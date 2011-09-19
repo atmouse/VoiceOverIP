@@ -1,16 +1,22 @@
 package cs.sun.ac.za.multicastvoip;
 
 import java.io.ByteArrayInputStream;
+<<<<<<< HEAD
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+=======
+>>>>>>> de6c61e66d1125fd7f8f84f016a10e836db7638f
 //import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+<<<<<<< HEAD
 import java.net.Socket;
+=======
+>>>>>>> de6c61e66d1125fd7f8f84f016a10e836db7638f
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -37,6 +43,7 @@ public class VoipClient {
 	SourceDataLine sourceDataLine;
 
 	public VoipClient(String ip)	{
+<<<<<<< HEAD
 		
 		Thread t = new Thread(new ServerConnection());
 		t.start();
@@ -70,6 +77,37 @@ public class VoipClient {
 //
 //		Thread PlayAudio = new Thread(new PlayAudio(this.receive_socket));
 //		PlayAudio.start();
+=======
+		try	{
+			//this.ip = InetAddress.getByName(ip);
+			this.ip = InetAddress.getByName("239.255.255.255");
+		} catch (Exception e)	{
+			System.out.println(e.getMessage());
+		}
+
+		try {
+			//this.receive_socket = new DatagramSocket(this.receive_port);
+			this.send_socket = new DatagramSocket(this.send_port);
+			
+			//only receiving socket needs to be a multicast socket
+			this.receive_socket = new MulticastSocket(this.receive_port);
+			//this.send_socket = new MulticastSocket(this.send_port);
+			
+			//only receiving socket needs to join the group
+			receive_socket.joinGroup(this.ip);
+			//send_socket.joinGroup(/*InetAddress*/);
+			
+			//System.out.println(this.send_socket.getLocalSocketAddress());
+		} catch (Exception e)	{
+			System.out.println("Error: " + e.getMessage());
+		}
+
+		Thread CaptureAudio = new Thread(new CaptureAudio(this.send_socket, this.ip, this.receive_port));
+		CaptureAudio.start();
+
+		Thread PlayAudio = new Thread(new PlayAudio(this.receive_socket));
+		PlayAudio.start();
+>>>>>>> de6c61e66d1125fd7f8f84f016a10e836db7638f
 
 	}
 
@@ -160,6 +198,7 @@ public class VoipClient {
 			}//end catch
 		}
 	}//end captureAudio method
+<<<<<<< HEAD
 	
 	class ServerConnection implements Runnable {
 		private Socket socket;
@@ -193,6 +232,8 @@ public class VoipClient {
 			}
 		}
 	}
+=======
+>>>>>>> de6c61e66d1125fd7f8f84f016a10e836db7638f
 
 	class PlayAudio implements Runnable {
 
@@ -279,7 +320,11 @@ public class VoipClient {
 		String ip = args[0]; //destination ip
 		//int dest_port = Integer.parseInt(args[1]); //destination port
 		//int src_port = Integer.parseInt(args[2]); //source port
+<<<<<<< HEAD
 		
+=======
+
+>>>>>>> de6c61e66d1125fd7f8f84f016a10e836db7638f
 		VoipClient client = new VoipClient(ip);		  
 
 	}
