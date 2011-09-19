@@ -1,11 +1,12 @@
-package cs.sun.ac.za.exampleclient;
+package cs.sun.ac.za.multicastvoip;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+//import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -17,10 +18,12 @@ import javax.sound.sampled.TargetDataLine;
 public class VoipClient {
 
 	private InetAddress ip; //the ip address to which the client wishes to send
-	private int dest_port; //the port to which the client wishes to send
-	private int src_port; //the clients own port, to listen on for traffic
-	private DatagramSocket receive_socket; //the socket to receive on
+	private int send_port = 3003;
+	private int receive_port = 3004; //the port on which all clients listen
+	//private DatagramSocket receive_socket; //the socket to receive on
 	private DatagramSocket send_socket; //the socket to send on
+	private MulticastSocket receive_socket;
+	//private MulticastSocket send_socket;
 
 	boolean stopCapture = false;
 	//ByteArrayOutputStream byteArrayOutputStream;
@@ -29,27 +32,35 @@ public class VoipClient {
 	AudioInputStream audioInputStream;
 	SourceDataLine sourceDataLine;
 
-	public VoipClient(String ip, int dest_port, int src_port)	{
+	public VoipClient(String ip)	{
 		try	{
-			this.ip = InetAddress.getByName(ip);
+			//this.ip = InetAddress.getByName(ip);
+			this.ip = InetAddress.getByName("239.255.255.255");
 		} catch (Exception e)	{
 			System.out.println(e.getMessage());
 		}
-
-		this.src_port = src_port;
-		this.dest_port = dest_port;
 
 		try {
-			this.receive_socket = new DatagramSocket(src_port);
-			this.send_socket = new DatagramSocket();
+			//this.receive_socket = new DatagramSocket(this.receive_port);
+			this.send_socket = new DatagramSocket(this.send_port);
+			
+			//only receiving socket needs to be a multicast socket
+			this.receive_socket = new MulticastSocket(this.receive_port);
+			//this.send_socket = new MulticastSocket(this.send_port);
+			
+			//only receiving socket needs to join the group
+			receive_socket.joinGroup(this.ip);
+			//send_socket.joinGroup(/*InetAddress*/);
+			
+			//System.out.println(this.send_socket.getLocalSocketAddress());
 		} catch (Exception e)	{
-			System.out.println(e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 		}
 
-		Thread CaptureAudio = new Thread(new CaptureAudio(this.send_socket, this.ip, this.dest_port));
+		Thread CaptureAudio = new Thread(new CaptureAudio(this.send_socket, this.ip, this.receive_port));
 		CaptureAudio.start();
 
-		Thread PlayAudio = new Thread(new PlayAudio(this.receive_socket, this.src_port));
+		Thread PlayAudio = new Thread(new PlayAudio(this.receive_socket));
 		PlayAudio.start();
 
 	}
@@ -144,13 +155,13 @@ public class VoipClient {
 
 	class PlayAudio implements Runnable {
 
-		private DatagramSocket socket;
-		private int port;
+		private MulticastSocket socket;
+		//private int port;
 		private byte[] tempBuffer;
 
-		public PlayAudio(DatagramSocket socket, int port)	{
+		public PlayAudio(MulticastSocket socket)	{
 			this.socket = socket;
-			this.port = port;
+			//this.port = port;
 			this.tempBuffer = new byte[10000];
 		}
 
@@ -225,11 +236,12 @@ public class VoipClient {
 
 	public static void main(String args[]){
 		String ip = args[0]; //destination ip
-		int dest_port = Integer.parseInt(args[1]); //destination port
-		int src_port = Integer.parseInt(args[2]); //source port
+		//int dest_port = Integer.parseInt(args[1]); //destination port
+		//int src_port = Integer.parseInt(args[2]); //source port
 
-		VoipClient client = new VoipClient(ip, dest_port, src_port);		  
+		VoipClient client = new VoipClient(ip);		  
 
 	}
 }
+
 
